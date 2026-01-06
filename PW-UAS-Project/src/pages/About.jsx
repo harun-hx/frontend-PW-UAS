@@ -1,28 +1,36 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function About() {
+  const navigate = useNavigate();
+
   return (
-    <div className="app-container">
-      <h1>The Team 🏆</h1>
-      <p className="subtitle">The minds behind the project.</p>
-      
-      <div className="info-section">
-        <h3>Your Name</h3>
-        <p>Lead Developer & AI Engineer. Built the backend integration and model deployment pipeline.</p>
+    <div className="app-container narrow">
+      <div className="text-left">
+        <button onClick={() => navigate(-1)} className="btn-back">← Back</button>
       </div>
 
-      <div className="info-section">
-        <h3>[Friend Name 1]</h3>
-        <p>Frontend Designer & QA Tester.</p>
-      </div>
+      <div className="ui-card text-center">
+        <h1>👨‍💻 The Team</h1>
+        <p className="subtitle">Built for the Final Project</p>
+        
+        <div className="about-content">
+          <p>
+            <strong>Project Name:</strong> AI Horse Breed Identifier<br/>
+            <strong>Tech Stack:</strong> React (Frontend) + Laravel (Backend) + Python (AI)<br/>
+            <strong>Objective:</strong> To demonstrate a microservices architecture where an AI engine operates independently from the user database.
+          </p>
 
-      <div className="info-section">
-        <h3>[Friend Name 2]</h3>
-        <p>Dataset Curator & Research.</p>
+          <h3 className="credits-header">Credits</h3>
+          <ul className="credits-list">
+            <li>
+              <strong>Harun (You):</strong> Full Stack Developer
+            </li>
+            <li>
+              <strong>Olga Belitskaya:</strong> Dataset Provider (Kaggle)
+            </li>
+          </ul>
+        </div>
       </div>
-      
-      <Link to="/" className="back-btn">← Back to Analyzer</Link>
     </div>
   );
 }
