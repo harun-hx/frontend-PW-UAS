@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 
 // Import Pages
-import About from './pages/About';
-import ModelInfo from './pages/ModelInfo';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import UserDashboard from './pages/UserDashboard';
-import HorsePedia from './pages/HorsePedia';
+import DogPedia from './pages/DogPedia'; 
 import AdminDashboard from './pages/AdminDashboard'; 
+// Note: We removed ModelInfo and About to keep it simple, 
+// but you can keep them if you have those files.
 
 import './App.css';
 
-// Keep the Flask AI URL separate (as it is likely a different service)
+// === FLASK AI URL (Your Dog Model) ===
 const FLASK_API_URL = "https://web-production-384d0.up.railway.app/predict";
 
-// === HOME COMPONENT (Protected) ===
+// === HOME COMPONENT ===
 function Home() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -24,12 +23,10 @@ function Home() {
   const navigate = useNavigate();
 
   const token = localStorage.getItem('auth_token');
-  const isAdmin = localStorage.getItem('is_admin') === 'true';
+  const isAdmin = localStorage.getItem('is_admin') === 'true'; // Check for string "true"
 
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    }
+    if (!token) navigate('/login');
   }, [token, navigate]);
   
   if (!token) return null;
@@ -49,16 +46,23 @@ function Home() {
 
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64String = reader.result;
+      // Remove header prefix for the raw base64
+      const base64String = reader.result; 
+      
       try {
         const response = await fetch(FLASK_API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: base64String }),
         });
+        
         const data = await response.json();
-        if (data.predictions) setPredictions(data.predictions);
-        else alert("Error: " + (data.error || "Unknown error"));
+        
+        if (data.predictions) {
+          setPredictions(data.predictions);
+        } else {
+          alert("Error: " + (data.error || "Unknown error"));
+        }
       } catch (error) {
         console.error("Error:", error);
         alert("Failed to connect to AI server.");
@@ -76,16 +80,17 @@ function Home() {
 
   return (
     <div className="app-container narrow">
-      <h1 className="page-title">🐴 Horse Breed AI</h1>
-      <p style={{color:'#666', marginBottom:'20px'}}>Upload an image to identify the breed</p>
+      <h1 className="page-title">🐶 Dog Breed AI</h1>
+      <p style={{color:'#666', marginBottom:'20px', textAlign:'center'}}>
+        Upload an image to identify the breed
+      </p>
       
       {/* NAVBAR */}
       <nav className="navbar">
         <Link to="/" className="nav-link active">Home</Link>
-        <Link to="/horses" className="nav-link">Encyclopedia</Link>
-        <Link to="/about" className="nav-link">About</Link>
-        <Link to="/dashboard" className="nav-link">Complaints</Link>
+        <Link to="/dogs" className="nav-link">Encyclopedia</Link>
         
+        {/* Only Admin sees the Admin Panel */}
         {isAdmin && <Link to="/admin" className="nav-link admin">Admin Panel</Link>}
         
         <button onClick={handleLogout} className="nav-link logout">Logout</button>
@@ -144,14 +149,15 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/model-info" element={<ModelInfo />} />
-        <Route path="/horses" element={<HorsePedia />} /> 
-        <Route path="/dashboard" element={<UserDashboard />} />
+        
+        {/* New Route for Dogs */}
+        <Route path="/dogs" element={<DogPedia />} /> 
+        
+        {/* Admin Dashboard */}
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
 }
 
-export default App;  
+export default App;

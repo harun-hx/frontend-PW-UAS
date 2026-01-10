@@ -2,233 +2,198 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api'; 
 
-function AdminDashboard() {
-  const [datasets, setDatasets] = useState([]);
-  const [complaints, setComplaints] = useState([]); 
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('breeds'); // 'breeds' or 'users'
   
-  // === CONSTANTS ===
-  const REAL_HORSE_PHOTO = "https://images.unsplash.com/photo-1553284965-8367dfd56633?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80";
-
-  // === STATE ===
-  const [form, setForm] = useState({ breed_name: '', description: '', image_count: '', sample_image_url: '' });
-  const [isEditing, setIsEditing] = useState(null);
+  const [breeds, setBreeds] = useState([]);
+  const [users, setUsers] = useState([]);
+  
+  // Form States
+  const [formData, setFormData] = useState({});
+  const [editingId, setEditingId] = useState(null);
   
   const navigate = useNavigate();
-  const token = localStorage.getItem('auth_token');
-  const isAdmin = localStorage.getItem('is_admin') === 'true';
 
-  // === EFFECTS ===
   useEffect(() => {
-    if (!token || !isAdmin) {
+    // 1. Security Check
+    const isAdmin = localStorage.getItem('is_admin') === 'true';
+    if (!isAdmin) {
+      alert("Unauthorized Access");
       navigate('/');
+      return;
     }
     fetchData();
-  }, []);
+  }, [activeTab]); 
 
   const fetchData = async () => {
     try {
-      const [dataRes, compRes] = await Promise.all([
-        api.get('/api/datasets'),
-        api.get('/api/complaints')
-      ]);
-      setDatasets(dataRes.data);
-      setComplaints(compRes.data);
+      if (activeTab === 'breeds') {
+        const res = await api.get('/api/breeds');
+        setBreeds(res.data);
+      } else {
+        const res = await api.get('/api/users');
+        setUsers(res.data);
+      }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Fetch error", error);
     }
   };
 
-  // === HANDLERS ===
+  // --- CRUD HANDLERS ---
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure?")) return;
+    try {
+      await api.delete(`/api/${activeTab}/${id}`);
+      fetchData(); 
+    } catch (error) {
+      alert("Delete failed");
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setFormData(item);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formData = { ...form };
-      if (!formData.sample_image_url) formData.sample_image_url = REAL_HORSE_PHOTO;
-
-      if (isEditing) {
-        await api.put(`/api/datasets/${isEditing}`, formData);
-        alert("Updated Successfully!");
+      if (editingId) {
+        // Update
+        await api.put(`/api/${activeTab}/${editingId}`, formData);
       } else {
-        await api.post('/api/datasets', formData);
-        alert("Created Successfully!");
+        // Create
+        await api.post(`/api/${activeTab}`, formData);
       }
-      resetForm();
+      setFormData({});
+      setEditingId(null);
       fetchData();
-    } catch (error) { 
-      console.error(error);
-      alert("Operation Failed"); 
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if(!window.confirm("Are you sure you want to delete this breed?")) return;
-    try {
-        await api.delete(`/api/datasets/${id}`);
-        fetchData();
+      alert("Saved successfully!");
     } catch (error) {
-        alert("Delete Failed");
+      alert("Operation failed. Check if you are Admin.");
     }
-  };
-
-  const markResolved = async (id) => {
-    try {
-      await api.put(`/api/complaints/${id}`);
-      setComplaints(complaints.map(c => c.id === id ? { ...c, status: 'resolved' } : c));
-    } catch (error) { alert("Failed to update status"); }
-  };
-
-  const handleEditClick = (item) => {
-    setForm(item);
-    setIsEditing(item.id);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCancel = () => {
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setForm({ breed_name: '', description: '', image_count: '', sample_image_url: '' });
-    setIsEditing(null);
-  };
-
-  const handleImageError = (ev) => {
-    ev.target.src = REAL_HORSE_PHOTO;
-    ev.target.onerror = null;
   };
 
   return (
     <div className="app-container wide">
-      
-      {/* 1. Header Section */}
       <div className="page-header">
-        <h1 className="page-title">🐴 Admin Dashboard</h1>
-        <button onClick={() => navigate('/')} className="btn-back">← Back to Home</button>
+        <h1 className="page-title">🛡️ Admin Dashboard</h1>
+        <button onClick={() => navigate('/')} className="btn-back">← Back Home</button>
       </div>
 
-      {/* 2. Top Section: Forms & Complaints (Side by Side) */}
+      {/* TABS */}
+      <div className="navbar" style={{justifyContent: 'flex-start'}}>
+        <button 
+          className={`nav-link ${activeTab === 'breeds' ? 'active' : ''}`}
+          onClick={() => {setActiveTab('breeds'); setFormData({}); setEditingId(null);}}
+        >
+          Manage Breeds
+        </button>
+        <button 
+          className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => {setActiveTab('users'); setFormData({}); setEditingId(null);}}
+        >
+          Manage Users
+        </button>
+      </div>
+
       <div className="top-grid">
         
-        {/* LEFT: Editor Form */}
-        <div className="admin-card">
-          <div className={`card-header-strip ${isEditing ? 'bg-edit' : 'bg-create'}`}>
-            <h3>{isEditing ? '✏️ Edit Breed Details' : '✨ Add New Breed'}</h3>
+        {/* LEFT: FORM AREA */}
+        <div className={`admin-card ${editingId ? 'bg-edit' : 'bg-create'}`}>
+          <div className="card-header-strip">
+            <h3>{editingId ? '✏️ Edit Item' : '➕ Create New'}</h3>
           </div>
-          
-          <form onSubmit={handleSubmit} className="form-body">
-            <div className="form-group">
-              <label className="form-label">Breed Name</label>
-              <input className="form-input" placeholder="e.g. Arabian" value={form.breed_name} onChange={e => setForm({...form, breed_name: e.target.value})} required />
-            </div>
+          <form className="form-body" onSubmit={handleSubmit}>
             
-            <div className="form-group">
-              <label className="form-label">Description</label>
-              <textarea className="form-input" placeholder="Brief history and traits..." value={form.description} onChange={e => setForm({...form, description: e.target.value})} required />
-            </div>
-
-            {/* SYMMETRIC COLUMNS FIX: 1fr 1fr for exact 50/50 split */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <div className="form-group">
-                <label className="form-label">Img Count</label>
-                <input type="number" className="form-input" placeholder="100" value={form.image_count} onChange={e => setForm({...form, image_count: e.target.value})} required />
-              </div>
-              <div className="form-group">
+            {/* DYNAMIC FORM FIELDS */}
+            {activeTab === 'breeds' ? (
+              <>
+                <label className="form-label">Breed Name</label>
+                <input className="form-input" value={formData.breed_name || ''} onChange={e => setFormData({...formData, breed_name: e.target.value})} required />
+                
+                <label className="form-label">Description</label>
+                <textarea className="form-input" rows="4" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} required />
+                
+                <label className="form-label">Image Count</label>
+                <input type="number" className="form-input" value={formData.image_count || ''} onChange={e => setFormData({...formData, image_count: e.target.value})} required />
+                
                 <label className="form-label">Image URL</label>
-                <input type="url" className="form-input" placeholder="https://..." value={form.sample_image_url || ''} onChange={e => setForm({...form, sample_image_url: e.target.value})} />
-              </div>
-            </div>
+                <input className="form-input" value={formData.sample_image_url || ''} onChange={e => setFormData({...formData, sample_image_url: e.target.value})} />
+              </>
+            ) : (
+              <>
+                <label className="form-label">User Name</label>
+                <input className="form-input" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                
+                <label className="form-label">Email</label>
+                <input type="email" className="form-input" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} required />
+                
+                <label className="form-label">Password {editingId && '(Leave blank to keep)'}</label>
+                <input type="password" className="form-input" value={formData.password || ''} onChange={e => setFormData({...formData, password: e.target.value})} />
+                
+                <label className="form-label" style={{marginTop:'10px', display:'flex', alignItems:'center'}}>
+                  <input type="checkbox" checked={formData.is_admin || false} onChange={e => setFormData({...formData, is_admin: e.target.checked})} />
+                  &nbsp; Is Admin User?
+                </label>
+              </>
+            )}
 
             <div className="btn-row">
-              <button type="submit" className={`btn-submit ${isEditing ? 'btn-save' : 'btn-create'}`}>
-                {isEditing ? 'Save Changes' : 'Create Breed'}
+              <button type="submit" className={`btn-submit ${editingId ? 'btn-save' : 'btn-create'}`}>
+                {editingId ? 'Update' : 'Create'}
               </button>
-              {isEditing && (
-                <button type="button" onClick={handleCancel} className="btn-submit btn-cancel">
-                  Cancel
-                </button>
-              )}
+              {editingId && <button type="button" className="btn-submit btn-cancel" onClick={() => {setEditingId(null); setFormData({})}}>Cancel</button>}
             </div>
           </form>
         </div>
 
-        {/* RIGHT: Complaints Inbox */}
+        {/* RIGHT: LIST AREA */}
         <div className="admin-card">
-          <div className="card-header-strip bg-inbox">
-            <h3>📩 Inbox</h3>
-            <span className="badge-count">
-              {complaints.filter(c => c.status === 'pending').length} Pending
-            </span>
+          <div className="card-header-strip">
+            <h3>📋 Existing {activeTab === 'breeds' ? 'Dog Breeds' : 'Users'}</h3>
           </div>
-          
           <div className="table-scroll">
-            {complaints.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>No messages.</p>
-            ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Message</th>
-                    <th>Action</th>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>{activeTab === 'breeds' ? 'Name' : 'User Info'}</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(activeTab === 'breeds' ? breeds : users).map(item => (
+                  <tr key={item.id}>
+                    <td>#{item.id}</td>
+                    <td>
+                      {activeTab === 'breeds' ? (
+                        <strong>{item.breed_name}</strong>
+                      ) : (
+                        <div>
+                          <strong>{item.name}</strong><br/>
+                          <small>{item.email}</small>
+                          {/* We check strictly for 1 or true */}
+                          {(item.is_admin === 1 || item.is_admin === true) && (
+                            <span className="badge-count" style={{background:'#f1c40f', marginLeft:'5px'}}>Admin</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="btn-row" style={{gap:'5px'}}>
+                        <button className="btn-resolve" onClick={() => handleEdit(item)}>Edit</button>
+                        <button className="btn-resolve" style={{background:'#e74c3c'}} onClick={() => handleDelete(item.id)}>Delete</button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {complaints.map(c => (
-                    <tr key={c.id}>
-                      <td>{c.user?.name || 'ID: ' + c.user_id}</td>
-                      <td>
-                        <div style={{fontWeight:'bold', marginBottom:'2px'}}>{c.subject}</div>
-                        <div style={{color:'#666'}}>{c.message.substring(0, 50)}...</div>
-                      </td>
-                      <td>
-                        {c.status === 'pending' ? (
-                          <button onClick={() => markResolved(c.id)} className="btn-resolve">Resolve</button>
-                        ) : <span className="status-done">✓ Done</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
 
-      {/* 3. Bottom Section: The Encyclopedia Grid */}
-      <h2 className="section-title">📚 Encyclopedia Database</h2>
-      
-      <div className="breed-grid">
-        {datasets.map(item => (
-          <div key={item.id} className="breed-card">
-            {/* LARGE IMAGE HEADER */}
-            <div className="breed-img-box">
-              <img 
-                src={item.sample_image_url || REAL_HORSE_PHOTO} 
-                onError={handleImageError} 
-                alt={item.breed_name}
-                className="breed-img"
-              />
-              <div className="photo-badge">{item.image_count} Photos</div>
-            </div>
-
-            {/* CARD BODY */}
-            <div className="breed-content">
-              <h3 className="breed-title">{item.breed_name}</h3>
-              <p className="breed-desc">
-                {item.description.length > 100 ? item.description.substring(0, 100) + '...' : item.description}
-              </p>
-              
-              {/* ACTION FOOTER */}
-              <div className="breed-actions">
-                <button onClick={() => handleEditClick(item)} className="action-btn btn-edit">Edit</button>
-                <button onClick={() => handleDelete(item.id)} className="action-btn btn-delete">Delete</button>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
 }
-
-export default AdminDashboard;
