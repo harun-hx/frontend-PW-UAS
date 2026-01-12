@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import DogPedia from './pages/DogPedia';
 import AdminDashboard from './pages/AdminDashboard'; 
+import About from './pages/About';
 import './App.css';
 
 const FLASK_API_URL = "https://web-production-81c3.up.railway.app/predict";
@@ -104,6 +105,7 @@ function Home() {
         <nav className="nav-menu">
           <Link to="/" className="nav-link active">Home</Link>
           <Link to="/dogs" className="nav-link">DogPedia</Link>
+          <Link to="/about" className="nav-link">About</Link>
           {isAdmin && <Link to="/admin" className="nav-link">Admin</Link>}
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </nav>
@@ -198,6 +200,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dogs" element={<DogPedia />} /> 
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/about" element={<About />} /><Route path="/about" element={<About />} />
       </Routes>
     </Router>
   );
