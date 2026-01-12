@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../api'; // Use the bridge to Railway
-import '../App.css'; // Ensure CSS is loaded
+import api from '../api';
+import '../App.css'; 
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -15,13 +15,10 @@ function Login() {
         email,
         password
       });
-
-      // Save token and user details
       localStorage.setItem('auth_token', response.data.token);
       localStorage.setItem('user_name', response.data.user.name);
       localStorage.setItem('is_admin', response.data.user.is_admin ? 'true' : 'false');
 
-      // Go to home and refresh to update Navbar
       navigate('/'); 
       window.location.reload();
     } catch (error) {
@@ -35,8 +32,6 @@ function Login() {
       <div className="auth-container">
         <h1>Welcome Back</h1>
         <p className="subtitle">Login to access the AI System</p>
-        
-        {/* White Card Box */}
         <div className="card">
           <form onSubmit={handleLogin}>
             <div className="form-group">
@@ -50,7 +45,6 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">Password</label>
               <input 
@@ -62,11 +56,9 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
             <button type="submit" className="btn-primary" style={{marginTop:'20px'}}>Login</button>
           </form>
         </div>
-        
         <p style={{marginTop:'20px', fontSize:'0.9rem', color:'#666'}}>
           Don't have an account? <Link to="/register" style={{color:'var(--primary)', fontWeight:'bold'}}>Sign Up</Link>
         </p>

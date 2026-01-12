@@ -22,7 +22,6 @@ export default function DogPedia() {
         </div>
         <button onClick={() => navigate('/')} className="btn-back">← Back Home</button>
       </div>
-
       {breeds.length === 0 ? (
         <div style={{textAlign:'center', padding:'50px', color:'#888'}}>
           <div className="spinner" style={{marginBottom:'20px'}}></div>
@@ -33,7 +32,6 @@ export default function DogPedia() {
           {breeds.map((breed) => (
             <div key={breed.id} className="breed-card">
               <div className="breed-img-box">
-                {/* 👇 UPDATED IMAGE & BADGE CODE */}
                 <img 
                   src={breed.sample_image_url || 'https://via.placeholder.com/300?text=No+Image'} 
                   alt={breed.breed_name} 
@@ -41,7 +39,6 @@ export default function DogPedia() {
                 />
                 <div className="photo-badge">{breed.image_count} Photos</div>
               </div>
-              
               <div className="breed-content">
                 <h3 className="breed-title">{breed.breed_name}</h3>
                 <p className="breed-desc">

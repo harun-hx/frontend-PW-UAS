@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../api'; // Use the bridge to Railway
+import api from '../api';
 import '../App.css';
 
 function Register() {
@@ -36,7 +36,6 @@ function Register() {
       <div className="auth-container">
         <h1>Create Account</h1>
         <p className="subtitle">Join us to start identifying breeds</p>
-        
         <div className="card">
           <form onSubmit={handleRegister}>
             <div className="form-group">
@@ -47,7 +46,6 @@ function Register() {
                 value={name} onChange={(e) => setName(e.target.value)}
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <input 
@@ -56,7 +54,6 @@ function Register() {
                 value={email} onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">Password</label>
               <input 
@@ -65,11 +62,9 @@ function Register() {
                 value={password} onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-
             <button type="submit" className="btn-primary" style={{marginTop:'20px'}}>Sign Up</button>
           </form>
         </div>
-        
         <p style={{marginTop:'20px', fontSize:'0.9rem', color:'#666'}}>
           Already have an account? <Link to="/login" style={{color:'var(--primary)', fontWeight:'bold'}}>Login</Link>
         </p>

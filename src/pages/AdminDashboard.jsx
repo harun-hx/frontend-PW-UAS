@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api'; 
-import '../App.css'; // Ensure CSS is imported
+import '../App.css';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('breeds'); // 'breeds' or 'users'
-  
+  const [activeTab, setActiveTab] = useState('breeds'); 
   const [breeds, setBreeds] = useState([]);
   const [users, setUsers] = useState([]);
-  
-  // Form States
   const [formData, setFormData] = useState({});
   const [editingId, setEditingId] = useState(null);
-  
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Security Check
     const isAdmin = localStorage.getItem('is_admin') === 'true';
     if (!isAdmin) {
       alert("Unauthorized Access");
@@ -40,7 +35,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- CRUD HANDLERS ---
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
     try {
@@ -60,10 +54,8 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       if (editingId) {
-        // Update
         await api.put(`/api/${activeTab}/${editingId}`, formData);
       } else {
-        // Create
         await api.post(`/api/${activeTab}`, formData);
       }
       setFormData({});
@@ -82,13 +74,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="app-container">
-      {/* HEADER */}
       <div className="page-header">
         <h1 className="page-title">🛡️ Admin Dashboard</h1>
         <button onClick={() => navigate('/')} className="btn-back">← Back Home</button>
       </div>
-
-      {/* TABS */}
       <div className="tab-nav">
         <button 
           className={`tab-btn ${activeTab === 'breeds' ? 'active' : ''}`}
@@ -103,35 +92,27 @@ export default function AdminDashboard() {
           Manage Users
         </button>
       </div>
-
       <div className="content-grid">
-        
-        {/* LEFT: FORM CARD */}
         <div className="card">
           <h3>{editingId ? '✏️ Edit Item' : '➕ Create New'}</h3>
           <p style={{marginBottom: '20px', color: '#6b7280'}}>
             {activeTab === 'breeds' ? 'Add a new dog breed info.' : 'Add a new user manually.'}
           </p>
-          
           <form onSubmit={handleSubmit}>
-            {/* DYNAMIC FIELDS */}
             {activeTab === 'breeds' ? (
               <>
                 <div className="form-group">
                   <label className="form-label">Breed Name</label>
                   <input className="form-input" value={formData.breed_name || ''} onChange={e => setFormData({...formData, breed_name: e.target.value})} required placeholder="e.g. Golden Retriever" />
                 </div>
-                
                 <div className="form-group">
                   <label className="form-label">Description</label>
                   <textarea className="form-input" rows="4" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} required placeholder="Short description..." />
                 </div>
-                
                 <div className="form-group">
                   <label className="form-label">Image Count</label>
                   <input type="number" className="form-input" value={formData.image_count || ''} onChange={e => setFormData({...formData, image_count: e.target.value})} required />
                 </div>
-                
                 <div className="form-group">
                   <label className="form-label">Image URL</label>
                   <input className="form-input" value={formData.sample_image_url || ''} onChange={e => setFormData({...formData, sample_image_url: e.target.value})} placeholder="https://..." />
@@ -143,12 +124,10 @@ export default function AdminDashboard() {
                   <label className="form-label">User Name</label>
                   <input className="form-input" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} required />
                 </div>
-                
                 <div className="form-group">
                   <label className="form-label">Email</label>
                   <input type="email" className="form-input" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} required />
                 </div>
-                
                 <div className="form-group">
                   <label className="form-label">Password {editingId && '(Leave blank to keep)'}</label>
                   <input type="password" className="form-input" value={formData.password || ''} onChange={e => setFormData({...formData, password: e.target.value})} />
@@ -160,7 +139,6 @@ export default function AdminDashboard() {
                 </label>
               </>
             )}
-
             <div className="btn-row">
               <button type="submit" className={`btn-submit ${editingId ? 'btn-save' : 'btn-create'}`}>
                 {editingId ? 'Update Item' : 'Create Item'}
@@ -173,8 +151,6 @@ export default function AdminDashboard() {
             </div>
           </form>
         </div>
-
-        {/* RIGHT: LIST CARD */}
         <div className="card">
           <h3>📋 Existing {activeTab === 'breeds' ? 'Dog Breeds' : 'Users'}</h3>
           <div className="table-container">
@@ -218,7 +194,6 @@ export default function AdminDashboard() {
             </table>
           </div>
         </div>
-
       </div>
     </div>
   );
